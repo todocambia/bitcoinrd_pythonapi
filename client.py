@@ -4,6 +4,8 @@ import hmac
 import hashlib
 import time
 
+
+# This will return the ticker of bitcoinrd api
 def get_ticker():
     url = "https://api.bitcoinrd.do/v2/ticker?symbol=${symbol}"
     resp = requests.get(url)
