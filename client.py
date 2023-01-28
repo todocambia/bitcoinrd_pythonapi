@@ -4,67 +4,86 @@ import hmac
 import hashlib
 import time
 
+API_URL= "https://api.bitcoinrd.do/v2/"
 
-# This will return the ticker of bitcoinrd api
-def get_ticker():
-    url = "https://api.bitcoinrd.do/v2/ticker?symbol=${symbol}"
+def get_ticker(symbol):
+    url = f"{API_URL}ticker?symbol={symbol.lower()}"
     resp = requests.get(url)
     data = resp.json()
     return data
 
+
 def get_tickers():
-    resp = requests.get("https://api.bitcoinrd.do/v2/tickers")
+    url = f"{API_URL}tickers"
+    resp = requests.get(url)
     data = resp.json()
     return data
 
-def get_orderbook():
-    resp = requests.get("https://api.bitcoinrd.do/v2/orderbook?symbol=${symbol}")
+
+def get_orderbook(symbol):
+    url = f"{API_URL}orderbook?symbol={symbol.lower()}"
+    resp = requests.get(url)
     data = resp.json()
     return data
+
 
 def get_orderbooks():
-    resp = requests.get("https://api.bitcoinrd.do/v2/orderbooks")
+    url = f"{API_URL}orderbooks"
+    resp = requests.get(url)
     data = resp.json()
     return data
+
 
 def get_trades():
-    resp = requests.get("https://api.bitcoinrd.do/v2/trades")
+    url = f"{API_URL}trades"
+    resp = requests.get(url)
     data = resp.json()
     return data
 
 
-
-tickers_data = get_tickers()
-print(json.dumps(tickers_data, indent=10))
-
+api_key = "9c9b2670898abef6cdbbe54cbaf7147944a23a7c"
+api_secret = "509c2d77ee36f63d0ac2819e0a9354a7b5fdd9ccc6ade815c6"
 
 
-api_key = "YOUR_API_KEY"
-api_secret = "YOUR_API_SECRET"
+# initialize the following variables: method, path and api_expires.
+def get_api_expires():
+    return str(int(time.time() + 60))
+
+def init_signature():
+    method = "GET"
+    path = "/v2/user/balance"
+    api_expires = get_api_expires()
+    return method, path, api_expires
+
+def auth_me(api_key, api_secret, method, path):
+    signature = generate_signature(method, path, get_api_expires())
+    api_expires = get_api_expires()
+    headers = {
+        "api-key": api_key,
+        "api-signature": signature,
+        "api-expires": api_expires
+    }
+    return headers
+
+def generate_signature(method, path, api_expires):
+    string_to_encode = method + path + api_expires
+    signature = hmac.new(api_secret.encode(),string_to_encode.encode(),hashlib.sha256).hexdigest()
+    return signature
 
 
-method = "GET"
-path = "/v2/user/balance"
-api_expires = str(int(time.time() + 60))
+import requests
+
+def get_balance(api_key, api_secret):
+    method, path, api_expires = init_signature()
+    headers = auth_me(api_key, api_secret, method, path)
+    response = requests.get("https://api.bitcoinrd.do/v2/user/balance", headers=headers)
+    if response.status_code == 200:
+        print(response.json())
+        return response.json()
+    else:
+        print("Error: " + str(response.status_code))
+        return "Error: " + str(response.status_code)
 
 
-string_to_encode = method + path + api_expires
-
-
-signature = hmac.new(api_secret.encode(), string_to_encode.encode(), hashlib.sha256).hexdigest()
-
-headers = {
-    "api-key": api_key,
-    "api-signature": signature,
-    "api-expires": api_expires
-}
-
-
-response = requests.get("https://api.bitcoinrd.do" + path, headers=headers)
-
-print(response.json())
-
-
-
-
-
+result = get_balance(api_key, api_secret)
+print(result)
