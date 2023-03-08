@@ -3,7 +3,7 @@ import json
 import hmac
 import hashlib
 import time
-
+from datetime import datetime
 API_URL= "https://api.bitcoinrd.do/v2/"
 
 def get_ticker(symbol):
@@ -12,13 +12,11 @@ def get_ticker(symbol):
     data = resp.json()
     return data
 
-
 def get_tickers():
     url = f"{API_URL}tickers"
     resp = requests.get(url)
     data = resp.json()
     return data
-
 
 def get_orderbook(symbol):
     url = f"{API_URL}orderbook?symbol={symbol.lower()}"
@@ -26,24 +24,17 @@ def get_orderbook(symbol):
     data = resp.json()
     return data
 
-
 def get_orderbooks():
     url = f"{API_URL}orderbooks"
     resp = requests.get(url)
     data = resp.json()
     return data
 
-
 def get_trades():
     url = f"{API_URL}trades"
     resp = requests.get(url)
     data = resp.json()
     return data
-
-
-api_key = "API_USER_KEY"
-api_secret = "API_USER_SECRET"
-
 
 # initialize the following variables: method, patßh and api_expires.
 def get_api_expires():
@@ -56,7 +47,7 @@ def init_signature():
     return method, path, api_expires
 
 def auth_me(api_key, api_secret, method, path):
-    signature = generate_signature(method, path, get_api_expires())
+    signature = generate_signature(method, path, get_api_expires(), api_secret)
     api_expires = get_api_expires()
     headers = {
         "api-key": api_key,
@@ -65,7 +56,7 @@ def auth_me(api_key, api_secret, method, path):
     }
     return headers
 
-def generate_signature(method, path, api_expires):
+def generate_signature(method, path, api_expires, api_secret):
     string_to_encode = method + path + api_expires
     signature = hmac.new(api_secret.encode(),string_to_encode.encode(),hashlib.sha256).hexdigest()
     return signature
@@ -82,10 +73,6 @@ def get_balance(api_key, api_secret):
     else:
         print("Error: " + str(response.status_code))
         return "Error: " + str(response.status_code)
-
-
-
-#User trades function
 
 def get_trades(api_key, api_secret):
     method = "GET"
@@ -105,6 +92,3 @@ def get_trades(api_key, api_secret):
     else:
         print("Error: " + str(response.status_code))
         return "Error: " + str(response.status_code)
-
-    
-
